@@ -10,7 +10,7 @@ function App() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/health")
+      .get("http://localhost:8001/health")
       .then((res) => setStatus(res.data.status))
       .catch(() => setStatus("error"));
   }, []);

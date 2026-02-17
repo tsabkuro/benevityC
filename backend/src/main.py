@@ -3,10 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-@app.get("/")
-def stub():
-    return {"message": "Hello, World!"}
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -14,3 +10,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def stub():
+    return {"message": "Hello, World!"}
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "port": 8000}
