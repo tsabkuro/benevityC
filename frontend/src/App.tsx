@@ -1,13 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import axios from 'axios'
 
 function App() {
   const [count, setCount] = useState(0)
+  const [status, setStatus] = useState<string>("loading");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/health")
+      .then((res) => setStatus(res.data.status))
+      .catch(() => setStatus("error"));
+  }, []);
 
   return (
     <>
+      <div>
+        <h1>Automated Campaign Kit</h1>
+        <p>Backend status: {status}</p>
+      </div>
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
