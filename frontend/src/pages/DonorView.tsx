@@ -1,4 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import CampaignCard from "../components/campaigncard.tsx";
+import campaignKits from "../data/campaignkits.json";
+
 
 function DonorView() {
     const navigate = useNavigate();
@@ -29,22 +32,15 @@ function DonorView() {
             </header>
 
             {/* Main content area: keep content centered vertically */}
-            <main className="flex-1 flex items-center">
-                <div className="max-w-4xl mx-auto px-6 w-full">
-                    <div className="py-20 text-center">
-                        <div className="bg-white p-12 rounded-2xl shadow-lg inline-block max-w-lg">
-                            <h2 className="text-2xl font-semibold text-[#1F2937] mb-4">
-                                Donor View (Coming Soon)
-                            </h2>
-                            <p className="text-[#6B7280] mb-8">
-                                Browse and support approved disaster relief campaigns.
-                            </p>
-                            <div className="space-y-3 text-sm text-[#6B7280]">
-                                <div><span className="text-[#16A34A]">✅</span> Verified campaigns only</div>
-                                <div><span className="text-[#16A34A]">✅</span> Vetted nonprofits</div>
-                                <div><span className="text-[#16A34A]">✅</span> One-click donations</div>
-                            </div>
-                        </div>
+            <main className="flex-1 px-6 py-10">
+                <div className="max-w-5xl mx-auto">
+                    <p className="text-[#6B7280] text-sm mb-6">
+                        {campaignKits.length} active campaign{campaignKits.length !== 1 ? "s" : ""}
+                    </p>
+                    <div className="flex flex-wrap gap-6 justify-start">
+                        {campaignKits.map((campaign) => (
+                            <CampaignCard key={campaign.id} campaign={campaign} />
+                        ))}
                     </div>
                 </div>
             </main>

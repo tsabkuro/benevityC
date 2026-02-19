@@ -1,0 +1,63 @@
+[
+  {
+    "id": "1",
+    "title": "Southern Africa Floods: Urgent Aid Needed",
+    "summary": "Devastating floods in Southern Africa have impacted approximately 1.3 million people since mid-December 2025. The disaster has caused widespread destruction of homes and critical infrastructure, severely disrupting access to essential health services across Mozambique, Malawi, South Africa, Tanzania, Zambia, and Zimbabwe. The situation is dire, with urgent needs including shelter, safe water, and healthcare. \n\nThe lack of proper sanitation and hygiene in displacement sites has heightened the risk of water-borne diseases, particularly acute watery diarrhoea and cholera. Overcrowding and inadequate access to safe water exacerbate these risks, demanding immediate intervention to prevent further suffering. \n\nImmediate humanitarian assistance is crucial to provide relief to those affected, prevent the spread of disease, and support the long-term recovery of the region.",
+    "location": "Mozambique, Malawi, South Africa, Tanzania, Zambia, Zimbabwe",
+    "event_type": "Flood",
+    "key_claims": [
+      {
+        "claim": "Around 1.3 million people have been affected by severe flooding in southern Africa since mid-December 2025.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "The floods have destroyed houses and critical infrastructure, disrupting access to health services.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "Urgent humanitarian needs include shelter, safe water and access to essential health services.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "Water-borne diseases, particularly acute watery diarrhoea and cholera, are serious threats in sites hosting people displaced by the deluge.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "About half of the people affected are in Mozambique.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      }
+    ],
+    "confidence_score": 100
+  },
+  {
+    "id": "2",
+    "title": "Southern Africa Floods: Urgent Aid Needed",
+    "summary": "Devastating floods in Southern Africa have impacted approximately 1.3 million people since mid-December 2025. The disaster has caused widespread destruction of homes and critical infrastructure, severely disrupting access to essential health services across Mozambique, Malawi, South Africa, Tanzania, Zambia, and Zimbabwe. The situation is dire, with urgent needs including shelter, safe water, and healthcare. \n\nThe lack of proper sanitation and hygiene in displacement sites has heightened the risk of water-borne diseases, particularly acute watery diarrhoea and cholera. Overcrowding and inadequate access to safe water exacerbate these risks, demanding immediate intervention to prevent further suffering. \n\nImmediate humanitarian assistance is crucial to provide relief to those affected, prevent the spread of disease, and support the long-term recovery of the region.",
+    "location": "Mozambique, Malawi, South Africa, Tanzania, Zambia, Zimbabwe",
+    "event_type": "Flood",
+    "key_claims": [
+      {
+        "claim": "Around 1.3 million people have been affected by severe flooding in southern Africa since mid-December 2025.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "The floods have destroyed houses and critical infrastructure, disrupting access to health services.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "Urgent humanitarian needs include shelter, safe water and access to essential health services.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "Water-borne diseases, particularly acute watery diarrhoea and cholera, are serious threats in sites hosting people displaced by the deluge.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      },
+      {
+        "claim": "About half of the people affected are in Mozambique.",
+        "source_url": "https://www.afro.who.int/news/around-13-million-people-affected-severe-flooding-southern-africa"
+      }
+    ],
+    "confidence_score": 100
+  }
+]
+
