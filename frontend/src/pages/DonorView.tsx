@@ -1,0 +1,55 @@
+import { useNavigate } from "react-router-dom";
+
+function DonorView() {
+    const navigate = useNavigate();
+
+    return (
+        <div className="h-screen w-screen bg-gradient-to-b from-white to-white flex flex-col">
+            {/* Full-width top header: buttons left, title right */}
+            <header className="w-full px-6 py-4 flex items-center justify-between">
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => navigate("/")}
+                        className="px-4 py-2 bg-[#6C3AED] text-#6B7280 hover:bg-[#5a2ed1] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3AED]"
+                    >
+                        Switch Role
+                    </button>
+                    <button
+                        onClick={() => {
+                            localStorage.clear();
+                            navigate("/");
+                        }}
+                        className="px-4 py-2 bg-[#E8503A] text-#6B7280 hover:bg-[#cf432f] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8503A]"
+                    >
+                        Logout
+                    </button>
+                </div>
+
+                <h1 className="text-2xl font-bold text-[#1F2937]">Campaigns</h1>
+            </header>
+
+            {/* Main content area: keep content centered vertically */}
+            <main className="flex-1 flex items-center">
+                <div className="max-w-4xl mx-auto px-6 w-full">
+                    <div className="py-20 text-center">
+                        <div className="bg-white p-12 rounded-2xl shadow-lg inline-block max-w-lg">
+                            <h2 className="text-2xl font-semibold text-[#1F2937] mb-4">
+                                Donor View (Coming Soon)
+                            </h2>
+                            <p className="text-[#6B7280] mb-8">
+                                Browse and support approved disaster relief campaigns.
+                            </p>
+                            <div className="space-y-3 text-sm text-[#6B7280]">
+                                <div><span className="text-[#16A34A]">✅</span> Verified campaigns only</div>
+                                <div><span className="text-[#16A34A]">✅</span> Vetted nonprofits</div>
+                                <div><span className="text-[#16A34A]">✅</span> One-click donations</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}
+
+export default DonorView;
