@@ -13,7 +13,8 @@ class ArticleScraper:
             article = NewspaperArticle(url)
             article.download()
             article.parse()
-            article.nlp()
+            # Note: NLP is expensive so I'm skipping it for now since it's not needed for MVP peer testing
+            #article.nlp()
         except Exception:
             logger.exception("Failed scraping/NLP for %s", url)
             return None

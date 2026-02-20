@@ -83,7 +83,7 @@ def scrape_stream(request: DisasterEvent):
         yield _sse({"type": "status", "message": 'Searching for "' + query + '"'})
 
         try:
-            results = pipeline.news_searcher.search(query)
+            results = pipeline.news_searcher.search(query, request.max_articles)
         except Exception:
             logger.exception("Search failed for query=%s", query)
             yield _sse({"type": "error", "message": "Failed to search news"})

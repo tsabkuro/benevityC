@@ -3,7 +3,7 @@ backend/.venv
 backend/venv
 **/__pycache__
 *.pyc
-
+.venv
 # Node
 frontend/node_modules
 dist

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DisasterEvent(BaseModel):
@@ -12,6 +12,7 @@ class DisasterEvent(BaseModel):
     lon: float
     date: str
     gdacs_url: str
+    max_articles: int = Field(default=5, ge=1, le=50)
 
 
 class NewsResult(BaseModel):
