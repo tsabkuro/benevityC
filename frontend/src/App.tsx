@@ -14,7 +14,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   TS: "tsunami",
 };
 
-function ContentCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+const ContentCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   return (
     <div className={`rounded-xl border border-border bg-background p-4 ${className}`}>
       {children}
@@ -44,13 +44,7 @@ type Article = {
   summary: string;
 };
 
-function EventCard({
-  event,
-  onScrape,
-}: {
-  event: DisasterEvent;
-  onScrape: (event: DisasterEvent) => void;
-}) {
+const EventCard = ({event, onScrape}: {event: DisasterEvent; onScrape: (event: DisasterEvent) => void;}) => {
   const label = EVENT_TYPE_LABELS[event.event_type.toUpperCase()] || event.event_type;
   return (
     <ContentCard>
@@ -80,7 +74,7 @@ function EventCard({
   );
 }
 
-function ArticleCard({ article, isNew }: { article: Article; isNew?: boolean }) {
+const ArticleCard = ({ article, isNew }: { article: Article; isNew?: boolean }) => {
   return (
     <ContentCard className={isNew ? "animate-pop-in" : ""}>
       <div className="text-base space-y-1">
@@ -106,7 +100,7 @@ type LogEntry = {
   type: "status" | "progress" | "error" | "done";
 };
 
-function ScrapeLog({ logs }: { logs: LogEntry[] }) {
+const ScrapeLog = ({ logs }: { logs: LogEntry[] }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -148,7 +142,7 @@ function ScrapeLog({ logs }: { logs: LogEntry[] }) {
   );
 }
 
-function App() {
+const App = () => {
   const [tab, setTab] = useState<"events" | "scrape">("events");
   const [events, setEvents] = useState<DisasterEvent[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -158,7 +152,7 @@ function App() {
   const [scrapeLogs, setScrapeLogs] = useState<LogEntry[]>([]);
   const [scrapeSource, setScrapeSource] = useState<string | null>(null);
 
-  async function fetchEvents() {
+  const fetchEvents = async () => {
     setLoading(true);
     setError("");
     try {
@@ -247,7 +241,7 @@ function App() {
 
   const [scrapeEvent, setScrapeEvent] = useState<DisasterEvent | null>(null);
 
-  function handleEventScrape(event: DisasterEvent) {
+  const handleEventScrape = (event: DisasterEvent) => {
     const label = EVENT_TYPE_LABELS[event.event_type.toUpperCase()] || event.event_type;
     const q = label + " " + event.country;
     const params = new URLSearchParams({
