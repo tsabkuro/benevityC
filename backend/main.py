@@ -40,7 +40,7 @@ def get_events():
 
 
 def _sse(data: dict) -> str:
-    return json.dumps(data) + "\n\n"
+    return f"data: {json.dumps(data)}\n\n"
 
 
 @app.post("/api/scrape/stream")
@@ -55,7 +55,7 @@ def scrape_stream(request: DisasterEvent):
         event_name = request.event_name
         date = request.date
         type_str = EVENT_TYPE_LABELS.get(event_type.upper(), event_type)
-
+        max_articles = request.max_articles or 5
         query = [type_str]
         if event_name:
             query.append(event_name)
@@ -82,8 +82,11 @@ def scrape_stream(request: DisasterEvent):
 
         yield _sse({"type": "status", "message": 'Searching for "' + query + '"'})
 
+        # oversample so we still end up with max_articles even if some fail/are irrelevant
+        search_limit = max_articles * 4  # tweak 3–6 depending on speed/quality tradeoff
+
         try:
-            results = pipeline.news_searcher.search(query, request.max_articles)
+            results = pipeline.news_searcher.search(query, search_limit)
         except Exception:
             logger.exception("Search failed for query=%s", query)
             yield _sse({"type": "error", "message": "Failed to search news"})
@@ -94,14 +97,21 @@ def scrape_stream(request: DisasterEvent):
             yield _sse({"type": "error", "message": "Did not find relevant articles"})
             return
 
-        msg = "Found " + str(total) + " results. Scraping articles..."
-        yield _sse({"type": "status", "message": msg})
+        yield _sse({
+            "type": "status",
+            "message": f"Found {total} results. Scraping up to {max_articles} articles..."
+        })
+
+        sent = 0
 
         for i, result in enumerate(results):
+            if sent >= max_articles:
+                break
+
             n = str(i + 1)
             yield _sse({
                 "type": "progress",
-                "message": "[" + n + "/" + str(total) + "] Resolving " + result.source + "...",
+                "message": "[" + n + "/" + str(total) + "] Resolving " + str(result.source) + "...",
                 "current": i + 1,
                 "total": total,
             })
@@ -109,27 +119,30 @@ def scrape_stream(request: DisasterEvent):
             real_url = pipeline.news_searcher.resolve_url(result.url)
             article = pipeline.article_scraper.scrape(real_url)
 
-            if article:
-                # Check relevance: does the article mention the country/location?
-                if relevance_keywords:
-                    haystack = (article.title + " " + article.text).lower()
-                    if not any(kw in haystack for kw in relevance_keywords):
-                        yield _sse({
-                            "type": "progress",
-                            "message": "[" + n + "/" + str(total) + "] Skipped (not relevant to " + request.country + ")",
-                            "current": i + 1,
-                            "total": total,
-                        })
-                        continue
-                yield _sse({"type": "article", "article": article.model_dump()})
-            else:
+            if not article:
                 yield _sse({
                     "type": "progress",
                     "message": "[" + n + "/" + str(total) + "] Skipped (could not parse)",
                     "current": i + 1,
                     "total": total,
                 })
+                continue
 
-        yield _sse({"type": "done"})
+            # Relevance filter
+            if relevance_keywords:
+                haystack = (article.title + " " + article.text).lower()
+                if not any((kw or "").lower() in haystack for kw in relevance_keywords):
+                    yield _sse({
+                        "type": "progress",
+                        "message": "[" + n + "/" + str(total) + "] Skipped (not relevant)",
+                        "current": i + 1,
+                        "total": total,
+                    })
+                    continue
+
+            sent += 1
+            yield _sse({"type": "article", "article": article.model_dump()})
+
+        yield _sse({"type": "done", "sent": sent, "requested": max_articles})
 
     return StreamingResponse(generate(), media_type="text/event-stream")

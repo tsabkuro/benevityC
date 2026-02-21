@@ -30,3 +30,4 @@ class Article(BaseModel):
     publish_date: str | None
     source: str
     summary: str
+    image_urls: list[str] = []
