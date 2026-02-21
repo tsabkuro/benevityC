@@ -1,18 +1,24 @@
 import json
+import logging
+from datetime import timedelta
+from email.utils import parsedate_to_datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
 from pipeline.gdacs_client import GDACSClient
 from pipeline.orchestrator import ScraperPipeline
+from pipeline.news_searcher import EVENT_TYPE_LABELS
+from models import DisasterEvent
+
 
 app = FastAPI()
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost", "http://localhost:80"],
+    allow_origins=["http://localhost", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,13 +26,6 @@ app.add_middleware(
 
 gdacs_client = GDACSClient()
 pipeline = ScraperPipeline()
-
-
-class ScrapeRequest(BaseModel):
-    query: str | None = None
-    event_type: str | None = None
-    event_date: str | None = None
-    country: str | None = None
 
 
 @app.get("/api/health")
@@ -40,63 +39,61 @@ def get_events():
     return {"events": events}
 
 
-@app.post("/api/scrape")
-def scrape(request: ScrapeRequest):
-    if request.query:
-        articles = pipeline.run_custom_query(request.query)
-    elif request.event_type:
-        articles = pipeline.run(event_type=request.event_type)
-    else:
-        articles = pipeline.run()
-    return {"articles": articles, "count": len(articles)}
-
-
 def _sse(data: dict) -> str:
-    return "data: " + json.dumps(data) + "\n\n"
+    return json.dumps(data) + "\n\n"
 
 
 @app.post("/api/scrape/stream")
-def scrape_stream(request: ScrapeRequest):
+def scrape_stream(request: DisasterEvent):
     def generate():
-        base_query = request.query or ""
-        if not base_query:
+        if not request:
             yield _sse({"type": "error", "message": "Query is required"})
             return
+        
+        event_type = request.event_type
+        country = request.country
+        event_name = request.event_name
+        date = request.date
+        type_str = EVENT_TYPE_LABELS.get(event_type.upper(), event_type)
 
-        if request.event_date:
-            from pipeline.news_searcher import NewsSearcher
-            ns = NewsSearcher()
-            # Parse event_type and country from the query (format: "label country")
-            # but we just append date filters directly
-            from datetime import timedelta
-            from email.utils import parsedate_to_datetime
-            try:
-                dt = parsedate_to_datetime(request.event_date)
-                after = (dt - timedelta(days=2)).strftime("%Y-%m-%d")
-                before = (dt + timedelta(days=2)).strftime("%Y-%m-%d")
-                query = base_query + " after:" + after + " before:" + before
-            except Exception:
-                query = base_query
+        query = [type_str]
+        if event_name:
+            query.append(event_name)
+        elif country:
+            query.append(country)
         else:
-            query = base_query
+            yield _sse({"type": "error", "message": "Failed to retrieve event"})
+            return
+        
+        relevance_keywords = query.copy() # keywords for relevance filtering
+        if date:
+            try:
+                dt = parsedate_to_datetime(date)
+                after = dt.strftime("%Y-%m-%d")
+                before = (dt + timedelta(days=5)).strftime("%Y-%m-%d")
+                query.append("after:" + after)
+                query.append("before:" + before)
+            except Exception:
+                logger.warning("Could not parse event date for query window: %s", date)
+                yield _sse({"type": "error", "message": "Failed parse event date"})
+                return
 
-        # Build keywords for relevance filtering from country name
-        relevance_keywords = []
-        if request.country:
-            # Split country into words, keep meaningful ones (3+ chars)
-            for word in request.country.lower().split():
-                if len(word) >= 3 and word not in ("the", "and", "region"):
-                    relevance_keywords.append(word)
+        query = '+'.join(query) # join query to a single string with + delim
 
-        yield _sse({"type": "status", "message": 'Searching for "' + query + '"...'})
+        yield _sse({"type": "status", "message": 'Searching for "' + query + '"'})
 
         try:
             results = pipeline.news_searcher.search(query)
         except Exception:
+            logger.exception("Search failed for query=%s", query)
             yield _sse({"type": "error", "message": "Failed to search news"})
             return
 
         total = len(results)
+        if total == 0:
+            yield _sse({"type": "error", "message": "Did not find relevant articles"})
+            return
+
         msg = "Found " + str(total) + " results. Scraping articles..."
         yield _sse({"type": "status", "message": msg})
 

@@ -1,5 +1,4 @@
 import feedparser
-import requests
 
 from models import DisasterEvent
 
@@ -8,9 +7,7 @@ GDACS_RSS_URL = "https://www.gdacs.org/xml/rss.xml"
 
 class GDACSClient:
     def fetch_events(self) -> list[DisasterEvent]:
-        response = requests.get(GDACS_RSS_URL, timeout=15)
-        response.raise_for_status()
-        feed = feedparser.parse(response.content)
+        feed = feedparser.parse(GDACS_RSS_URL)
         events = []
         for entry in feed.entries:
             event = self._parse_entry(entry)
@@ -28,6 +25,7 @@ class GDACSClient:
 
             return DisasterEvent(
                 event_type=entry.get("gdacs_eventtype", "Unknown"),
+                event_name=entry.get("eventname", ""),
                 title=entry.get("title", ""),
                 country=entry.get("gdacs_country", "Unknown"),
                 severity=severity,

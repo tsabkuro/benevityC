@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const API = "http://localhost:8000/api";
 
@@ -23,15 +22,16 @@ const ContentCard = ({ children, className = "" }: { children: React.ReactNode; 
 }
 
 type DisasterEvent = {
-  event_type: string;
-  title: string;
-  country: string;
-  severity: string;
   alert_level: string;
+  country: string;
+  date: string;
+  event_type: string;
+  gdacs_url: string;
   lat: number;
   lon: number;
-  date: string;
-  gdacs_url: string;
+  severity: string;
+  event_name: string;
+  title: string;
 };
 
 type Article = {
@@ -142,11 +142,16 @@ const ScrapeLog = ({ logs }: { logs: LogEntry[] }) => {
   );
 }
 
+async function apiGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${API}/${path}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
 const App = () => {
   const [tab, setTab] = useState<"events" | "scrape">("events");
   const [events, setEvents] = useState<DisasterEvent[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [scrapeLogs, setScrapeLogs] = useState<LogEntry[]>([]);
@@ -156,9 +161,7 @@ const App = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/events`);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
+      const data = await apiGet<{ events: DisasterEvent[] }>("events");
       setEvents(data.events);
     } catch (err) {
       setError("Failed to fetch events: " + (err instanceof Error ? err.message : String(err)));
@@ -167,17 +170,15 @@ const App = () => {
     }
   }
 
-  const runScrape = useCallback(async (q: string, source?: string, eventDate?: string, country?: string) => {
-    if (!q.trim()) return;
+  const runScrape = useCallback(async (event: DisasterEvent) => {
+    if (!event) return;
     setLoading(true);
     setError("");
     setArticles([]);
     setScrapeLogs([]);
-    setScrapeSource(source || null);
+    setScrapeSource(event.title || null);
 
-    const body: Record<string, string> = { query: q.trim() };
-    if (eventDate) body.event_date = eventDate;
-    if (country) body.country = country;
+    const body: DisasterEvent = event;
 
     try {
       const res = await fetch(`${API}/scrape/stream`, {
@@ -187,21 +188,20 @@ const App = () => {
       });
 
       const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
       if (!reader) throw new Error("No reader");
 
+      const decoder = new TextDecoder();
       let buffer = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
+        const lines = buffer.split("\n\n");
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6);
+          const jsonStr = line;
           try {
             const event = JSON.parse(jsonStr);
             if (event.type === "article") {
@@ -242,36 +242,10 @@ const App = () => {
   const [scrapeEvent, setScrapeEvent] = useState<DisasterEvent | null>(null);
 
   const handleEventScrape = (event: DisasterEvent) => {
-    const label = EVENT_TYPE_LABELS[event.event_type.toUpperCase()] || event.event_type;
-    const q = label + " " + event.country;
-    const params = new URLSearchParams({
-      query: q,
-      source: event.title,
-      country: event.country,
-      event_json: JSON.stringify(event),
-    });
-    if (event.date) params.set("event_date", event.date);
-    window.open("?" + params.toString(), "_blank");
+    setTab("scrape");
+    setScrapeEvent(event);
+    runScrape(event);
   }
-
-  // On mount, check URL params for auto-scrape from a new tab
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("query");
-    const source = params.get("source");
-    const eventDate = params.get("event_date");
-    const eventJson = params.get("event_json");
-    const country = params.get("country");
-    if (q) {
-      setTab("scrape");
-      setQuery(q);
-      if (eventJson) {
-        try { setScrapeEvent(JSON.parse(eventJson)); } catch { /* ignore */ }
-      }
-      runScrape(q, source || undefined, eventDate || undefined, country || undefined);
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-  }, [runScrape]);
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 pt-6 pb-12 font-normal">
@@ -337,22 +311,6 @@ const App = () => {
               Scraping for: <span className="text-foreground">{scrapeSource}</span>
             </p>
           )}
-          <div className="flex gap-2 mb-6">
-            <Input
-              className="h-9 rounded-xl text-base"
-              placeholder="Search query (e.g. earthquake Russia)..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && runScrape(query)}
-            />
-            <Button
-              className="h-9 rounded-xl bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-700 text-base"
-              onClick={() => runScrape(query)}
-              disabled={loading || !query.trim()}
-            >
-              {loading ? "Scraping..." : "Scrape"}
-            </Button>
-          </div>
           {scrapeEvent ? (
             <div className="flex gap-6 items-start">
               <div className="flex-1 min-w-0">
