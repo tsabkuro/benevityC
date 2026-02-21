@@ -38,17 +38,20 @@ class NewsSearcher:
             q += " after:" + after + " before:" + before
         return q
 
-    def search(self, query: str) -> list[NewsResult]:
+    def search(self, query: str, limit: int | None = None) -> list[NewsResult]:
         url = GOOGLE_NEWS_RSS.format(query=query)
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         feed = feedparser.parse(response.content)
-        results = []
+
+        results: list[NewsResult] = []
         entries = feed.get("entries", [])
         for entry in entries:
             result = self._parse_entry(entry)
             if result:
                 results.append(result)
+                if limit is not None and len(results) >= limit:
+                    break
         return results
 
     def _parse_entry(self, entry: dict) -> NewsResult | None:
