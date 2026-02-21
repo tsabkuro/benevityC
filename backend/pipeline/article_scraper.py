@@ -2,6 +2,10 @@ from newspaper import Article as NewspaperArticle
 
 from models import Article
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ArticleScraper:
     def scrape(self, url: str) -> Article | None:
@@ -11,6 +15,7 @@ class ArticleScraper:
             article.parse()
             article.nlp()
         except Exception:
+            logger.exception("Failed scraping/NLP for %s", url)
             return None
 
         if not article.text:

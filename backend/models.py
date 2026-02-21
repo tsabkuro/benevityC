@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 
 
 class DisasterEvent(BaseModel):
     event_type: str
     title: str
+    event_name: str
     country: str
     severity: str
     alert_level: str
