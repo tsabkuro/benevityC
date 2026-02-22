@@ -9,3 +9,7 @@ frontend/node_modules
 dist
 
 .DS_Store
+
+key.json
+.env
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    

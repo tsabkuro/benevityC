@@ -35,6 +35,9 @@ CAMPAIGN_KIT_SCHEMA = {
         "confidence_score": {
             "type": "number",
         },
+        "image_url": {
+            "type": "string",
+        },
     },
-    "required": ["title", "location", "event_type", "summary", "key_claims", "confidence_score"],
+    "required": ["title", "location", "event_type", "summary", "key_claims", "confidence_score", "image_url"],
 }

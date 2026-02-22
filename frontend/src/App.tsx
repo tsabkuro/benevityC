@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { CampaignKit, type CampaignKitData } from "@/components/CampaignKit";
 
 const API = "http://localhost:8000/api";
 
@@ -42,6 +43,7 @@ type Article = {
   publish_date: string | null;
   source: string;
   summary: string;
+  image_urls: string[];
 };
 
 const EventCard = ({event, onScrape}: {event: DisasterEvent; onScrape: (event: DisasterEvent) => void;}) => {
@@ -75,8 +77,17 @@ const EventCard = ({event, onScrape}: {event: DisasterEvent; onScrape: (event: D
 }
 
 const ArticleCard = ({ article, isNew }: { article: Article; isNew?: boolean }) => {
+  const image = article.image_urls?.[0];
   return (
     <ContentCard className={isNew ? "animate-pop-in" : ""}>
+      {image && (
+        <img
+          src={image}
+          alt={article.title}
+          className="w-full h-48 object-cover rounded-lg mb-3"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+      )}
       <div className="text-base space-y-1">
         <div><span className="font-semibold">Title:</span> {article.title}</div>
         <div><span className="font-semibold">URL:</span>{" "}
@@ -176,6 +187,7 @@ const App = () => {
     setError("");
     setArticles([]);
     setScrapeLogs([]);
+    setKit(null);
     setScrapeSource(event.title || null);
 
     const body: DisasterEvent = event;
@@ -201,7 +213,8 @@ const App = () => {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          const jsonStr = line;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6);
           try {
             const event = JSON.parse(jsonStr);
             if (event.type === "article") {
@@ -240,6 +253,29 @@ const App = () => {
   }, []);
 
   const [scrapeEvent, setScrapeEvent] = useState<DisasterEvent | null>(null);
+  const [kit, setKit] = useState<CampaignKitData | null>(null);
+  const [generating, setGenerating] = useState(false);
+
+  async function generateKit() {
+    if (!articles.length || !scrapeEvent) return;
+    setGenerating(true);
+    setKit(null);
+    const label = EVENT_TYPE_LABELS[scrapeEvent.event_type.toUpperCase()] || scrapeEvent.event_type;
+    const genQuery = [label, scrapeEvent.event_name || scrapeEvent.country].filter(Boolean).join(" ");
+    try {
+      const res = await fetch(`${API}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articles, query: genQuery }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      setKit(await res.json() as CampaignKitData);
+    } catch (err) {
+      setKit({ error: err instanceof Error ? err.message : String(err) } as CampaignKitData);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   const handleEventScrape = (event: DisasterEvent) => {
     setTab("scrape");
@@ -319,9 +355,19 @@ const App = () => {
                   <p className="text-base text-red-500 mb-4">{error}</p>
                 )}
                 {articles.length > 0 && !loading && (
-                  <p className="text-base text-muted-foreground mb-4">
-                    {articles.length} articles scraped:
-                  </p>
+                  <div className="mb-4 space-y-3">
+                    <p className="text-base text-muted-foreground">
+                      {articles.length} articles scraped:
+                    </p>
+                    <Button
+                      className="h-9 rounded-xl bg-green-600 text-white hover:bg-green-700 active:bg-green-700 text-base"
+                      onClick={generateKit}
+                      disabled={generating}
+                    >
+                      {generating ? "Generating..." : "Generate Campaign Kit"}
+                    </Button>
+                    {kit && <CampaignKit kit={kit} />}
+                  </div>
                 )}
                 <div className="flex flex-col gap-3">
                   {articles.map((a, i) => (
