@@ -17,4 +17,7 @@ services:
       - '8000:8000'
     volumes:
       - ./backend:/app
+      - ./key.json:/app/key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
